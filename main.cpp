@@ -17,7 +17,7 @@ TEST(CyclicBuffer, create)
 {
     size_t size = 8*1024*1024;
     CyclicBuffer buff(size);
-    EXPECT_EQ(size, buff.buffer_size());
+    EXPECT_EQ(size, buff.capacity());
 }
 
 TEST(CyclicBuffer, create2)
@@ -25,7 +25,7 @@ TEST(CyclicBuffer, create2)
     size_t size = 8*1024*1024;
     CyclicBuffer cb;
     size_t result = cb.create(size);
-    bool ret = ((result==size) && (cb.buffer_size()==size));
+    bool ret = ((result==size) && (cb.capacity()==size));
     EXPECT_EQ(ret, true);
 }
 
@@ -138,11 +138,11 @@ TEST(CyclicBuffer, get_write_offset)
     EXPECT_EQ(write_ret, cb.get_write_offset());
 }
 
-TEST(CyclicBuffer, buffer_size)
+TEST(CyclicBuffer, capacity)
 {
     size_t size = 8*1024*1024;
     CyclicBuffer cb(size);
-    EXPECT_EQ(size, cb.buffer_size());
+    EXPECT_EQ(size, cb.capacity());
 }
 
 TEST(CyclicBuffer, write_avail)
@@ -288,6 +288,7 @@ TEST(CyclicBuffer, set_offset5)
     EXPECT_EQ(cb.read_avail(), 0);
 }
 
+/*
 TEST(CyclicBuffer, test_file)
 {
     size_t size = 8*1024*1024;
@@ -333,8 +334,39 @@ TEST(CyclicBuffer, test_file)
     char msg[128] = {0};
     sprintf(msg, "diff record.mp4 %s", out_name.c_str());
     int value = system(msg);
-    //remove(out_name.c_str());
+    remove(out_name.c_str());
     EXPECT_EQ(value, 0);
+}
+*/
+
+TEST(CyclicBufferPointer, construct)
+{
+    size_t size = myrand(8*1024*1024);
+    char *p = new char[size];
+    CyclicBufferPointer cp(p, size);
+    delete[] p;
+    EXPECT_EQ(cp.capacity(), size);
+}
+
+TEST(CyclicBufferPointer, write)
+{
+    char msg[11] = {0};
+    char *p = msg;
+    size_t len = 11;
+    CyclicBufferPointer cp(p, len);
+    cp.write("test write", 11);
+    EXPECT_EQ(0, strcmp(p, "test write"));
+}
+
+TEST(CyclicBufferPointer, read)
+{
+    char msg[] = "test read";
+    size_t size = sizeof(msg) / sizeof(msg[0]);
+    char *p = msg;
+    CyclicBufferPointer cp(p, size);
+    char out[11] = {0};
+    cp.read(out, 10);
+    EXPECT_EQ(0, strcmp("test read", out));
 }
 
 int main(int argc, char** argv)

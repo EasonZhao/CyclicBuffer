@@ -98,7 +98,7 @@ long CyclicBuffer::get_write_offset(void)
     return read_pos_.offset + read_avail();
 }
 
-size_t CyclicBuffer::buffer_size(void)
+size_t CyclicBuffer::capacity(void)
 {
     return capacity_;
 }
@@ -127,7 +127,7 @@ size_t CyclicBuffer::create(size_t const &size)
     save_pos_.p = buffer_;
     capacity_ = size;
     reset();
-    return buffer_size();
+    return capacity();
 }
 
 void CyclicBuffer::destory(void)
@@ -184,23 +184,6 @@ size_t CyclicBuffer::drop_save(size_t const &size)
     return drop_size;
 }
 
-size_t CyclicBuffer::buffer_size(char* const beg, char* const end)
-{
-    size_t buffer_size = 0;
-    char *buffer_end = buffer_ + capacity_;
-    if (beg <= buffer_end && beg >= buffer_ 
-        && end <= buffer_end && end >= buffer_) {
-        //指针相同时返回0
-        if (end >= beg) {
-            buffer_size = end - beg;
-        } else {
-            buffer_size += buffer_end - beg;
-            buffer_size += end - buffer_;
-        }
-    }
-    return buffer_size;
-}
-    
 size_t CyclicBuffer::write_buffer_size(void)
 {
     return capacity_ - read_avail() - save_buffer_size();
@@ -238,3 +221,87 @@ int CyclicBuffer::move_pos(char* &pos, int step)
     return step;
 }
 
+/**********************************************************************/
+CyclicBufferPointer::CyclicBufferPointer(char* &beg, size_t& capacity, long offset) :
+    buffer_(beg),
+    capacity_(capacity),
+    p_(buffer_),
+    offset_(offset)
+{
+}
+
+long CyclicBufferPointer::offset(void)
+{
+    return offset_;
+}
+
+char* CyclicBufferPointer::pos(void)
+{
+    return p_;
+}
+
+int CyclicBufferPointer::move(int step)
+{
+    if (step == 0) return 0;
+    step = step % capacity_;
+    if (step > 0) {
+        int len_to_end = (buffer_ + capacity_) - p_;
+        if (step <= len_to_end) {
+            p_ += step;
+        } else {
+            p_ = buffer_ + (step - len_to_end);
+        }
+    } else {
+        int len_to_beg = p_ - buffer_;
+        if ((-step) <= len_to_beg) {
+            p_ += step;
+        } else {
+            p_ = (buffer_ + capacity_) + (step + len_to_beg);
+        }
+    }
+    offset_ += step;
+    return step;
+}
+
+int CyclicBufferPointer::write(char *data, const size_t data_len)
+{
+    int data_to_write = 0;
+    if (data_len > capacity_) 
+        data_to_write = data_len % capacity_;
+    else 
+        data_to_write = data_len;
+    int len_to_end = (buffer_ + capacity_) - p_;
+    if (len_to_end >= data_to_write) {
+        memcpy(p_, data, data_to_write);
+    } else {
+        memcpy(p_, data, len_to_end);
+        memcpy(buffer_, data + len_to_end, data_to_write - len_to_end);
+    }
+    move(data_to_write);
+    return data_to_write;
+}
+
+int CyclicBufferPointer::read(char* data, const size_t data_len)
+{
+    int data_to_read = 0;
+    if (data_len > capacity_)
+        data_to_read = data_len % capacity_;
+    else 
+        data_to_read = data_len;
+    int len_to_end = (buffer_ + capacity_) - p_;
+    if (len_to_end >= data_to_read) {
+        memcpy(data, p_, data_to_read);
+    } else {
+        memcpy(data, p_, len_to_end);
+        memcpy(data + len_to_end, buffer_, data_to_read - len_to_end);
+    }
+    move(data_to_read);
+    return data_to_read;
+}
+
+size_t CyclicBufferPointer::capacity(void)
+{
+    return capacity_;
+}
+
+    
