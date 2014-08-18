@@ -10,9 +10,9 @@ public:
     ///构造函数
     ///@param[in] buffer 物理内存起始位置
     ///@param[in] capactiy 物理内存容量
-    ///@param[in] end 有效数据结束位置（外部控制移动）
+    ///@param[in] pos 有效数据起始位置（外部控制移动）
     ///@param[in] offset 逻辑io偏移位置
-    CyclicBufferSection(char* &buffer, size_t& capacity, char* &end, long offset = 0);
+    CyclicBufferSection(char* &buffer, size_t& capacity, long offset = 0);
 
     long offset(void);
 
@@ -25,9 +25,6 @@ public:
     ///@note 从beg开始读取，最多读取到end
     int read(char *data, const size_t data_len);
 
-    ///获取有效数据长度
-    size_t avail_size(void);
-
     size_t capacity(void);
 
     CyclicBufferSection& operator += (long value);
@@ -35,15 +32,14 @@ public:
     CyclicBufferSection& operator -= (long value);
 
     ///重置
-    void reset_offset(void);
+    void reset_offset(long offset = 0);
 private:
-    int move(int step);
+    int move_pos(int step);
 
 private:
     char* &buffer_;         ///<物理内存起始位置
-    size_t & capacity_;     ///<物理内存容量
-    char* beg_;               ///<有效数据结束位置
-    char* &end_;            ///<有效数据结束位置
+    size_t const & capacity_;     ///<物理内存容量
+    char* pos_;               ///<有效数据结束位置
     long offset_;
 };
 

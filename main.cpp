@@ -1,6 +1,7 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "CyclicBuffer.h"
+#include "CyclicBufferSection.h"
 #include <stdio.h>
 #include <algorithm>
 #include <fstream>
@@ -9,7 +10,6 @@ using namespace std;
 
 int myrand(int const &max)
 {
-    srand(time(NULL));
     return rand() % max + 1;
 }
 
@@ -49,6 +49,7 @@ TEST(CyclicBuffer, write2)
     delete[] p;
     EXPECT_EQ(0, cb.write_avail());
 }
+
 TEST(CyclicBuffer, read)
 {
     size_t size = 8*1024*1024;
@@ -288,7 +289,6 @@ TEST(CyclicBuffer, set_offset5)
     EXPECT_EQ(cb.read_avail(), 0);
 }
 
-/*
 TEST(CyclicBuffer, test_file)
 {
     size_t size = 8*1024*1024;
@@ -301,7 +301,6 @@ TEST(CyclicBuffer, test_file)
     char *read_buff = new char[1024]; 
     char *write_buff = new char[1024]; 
     long read_total = 0, write_total = 0;
-    //bool read_fin = false;
     bool write_fin = false;
     while (!write_fin) {
         size_t read_size = myrand(1024);    
@@ -309,8 +308,10 @@ TEST(CyclicBuffer, test_file)
         read_size = std::min(read_size, (size_t)(file_size - read_total));
         if (read_size > 0) {
             in.read(read_buff, read_size);
+            printf("read size:%d\n", read_size);
             assert(in);
-            cb.write(read_buff, read_size);
+            int ret = cb.write(read_buff, read_size);
+            assert(ret == read_size);
             read_total += read_size;
         }
         //read_fin = (file_size == read_total);
@@ -319,9 +320,11 @@ TEST(CyclicBuffer, test_file)
         write_size = std::min(write_size, cb.read_avail());
         write_size = std::min(write_size, (size_t)(file_size - write_total));
         if (write_size > 0) {
-            cb.read(write_buff, write_size); 
+            int ret = cb.read(write_buff, write_size); 
+            assert(ret == write_size);
             cb.drop(write_size);
             out.write(write_buff, write_size);
+            printf("write size:%d\n", write_size);
             assert(out);
             write_total += write_size;
         }
@@ -337,40 +340,102 @@ TEST(CyclicBuffer, test_file)
     remove(out_name.c_str());
     EXPECT_EQ(value, 0);
 }
-*/
 
-TEST(CyclicBufferPointer, construct)
+TEST(CyclicBufferSection, construct)
 {
     size_t size = myrand(8*1024*1024);
     char *p = new char[size];
-    CyclicBufferPointer cp(p, size);
+    CyclicBufferSection cp(p, size);
     delete[] p;
     EXPECT_EQ(cp.capacity(), size);
 }
 
-TEST(CyclicBufferPointer, write)
+TEST(CyclicBufferSection, write)
 {
     char msg[11] = {0};
     char *p = msg;
     size_t len = 11;
-    CyclicBufferPointer cp(p, len);
+    CyclicBufferSection cp(p, len);
     cp.write("test write", 11);
     EXPECT_EQ(0, strcmp(p, "test write"));
 }
 
-TEST(CyclicBufferPointer, read)
+TEST(CyclicBufferSection, read)
 {
     char msg[] = "test read";
     size_t size = sizeof(msg) / sizeof(msg[0]);
     char *p = msg;
-    CyclicBufferPointer cp(p, size);
+    CyclicBufferSection cp(p, size);
     char out[11] = {0};
+    cp.read(out, 4);
+    EXPECT_EQ(0, strcmp("test", out));
+}
+
+/*
+   TEST(CyclicBufferSection, avail_size)
+   {
+   char msg[] = "test read";
+   size_t size = sizeof(msg) / sizeof(msg[0]);
+   char *p = msg;
+   char *p1 = msg;
+   char *p2 = p + 5;
+   CyclicBufferSection cp(p, size, p1, p2);
+   EXPECT_EQ(5, cp.avail_size());
+   }
+ */
+
+/*
+   TEST(CyclicBufferSection, avail_size2)
+   {
+   char msg[] = "test read";
+   size_t size = sizeof(msg) / sizeof(msg[0]);
+   char *p = msg;
+   char *p1 = msg;
+   char *p2 = p;
+   CyclicBufferSection cp(p, size);
+   assert(cp.avail_size() == 0);
+   int tmp = myrand(size);
+   p2 += tmp;
+   EXPECT_EQ(tmp, cp.avail_size());
+   }
+ */
+
+TEST(CyclicBufferSection, operator1)
+{
+    char msg[] = "test read";
+    size_t size = sizeof(msg) / sizeof(msg[0]);
+    char *p = msg;
+    CyclicBufferSection cp(p, size);
+    cp += 5;
+    assert(cp.offset() == 5);
+    char out[10] = {0};
     cp.read(out, 10);
-    EXPECT_EQ(0, strcmp("test read", out));
+    EXPECT_EQ(strcmp(out, "read"), 0);
+}
+
+TEST(CyclicBufferSection, operator2)
+{
+    char msg[] = "test read";
+    size_t size = sizeof(msg) / sizeof(msg[0]);
+    char *p = msg;
+    CyclicBufferSection cp(p, size);
+    cp += 0;
+    EXPECT_EQ(0, cp.offset());
+}
+
+TEST(CyclicBufferSection, operator3)
+{
+    char msg[] = "test read";
+    size_t size = sizeof(msg) / sizeof(msg[0]);
+    char *p = msg;
+    CyclicBufferSection cp(p, size, 1);
+    cp -= 1;
+    EXPECT_EQ(0, cp.offset());
 }
 
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

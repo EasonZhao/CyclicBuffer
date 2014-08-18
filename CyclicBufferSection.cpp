@@ -1,12 +1,12 @@
 #include "CyclicBufferSection.h"
 #include "string.h"
 #include <algorithm>
+#include <assert.h>
 
-CyclicBufferSection::CyclicBufferSection(char* &buffer, size_t& capacity, char* &end, long offset) :
+CyclicBufferSection::CyclicBufferSection(char* &buffer, size_t& capacity, long offset) :
     buffer_(buffer),
     capacity_(capacity),
-    beg_(buffer_),
-    end_(end),
+    pos_(buffer_),
     offset_(offset)
 {
 }
@@ -18,13 +18,13 @@ long CyclicBufferSection::offset(void)
 
 char* CyclicBufferSection::pos(void)
 {
-    return beg_;
+    return pos_;
 }
 
-int CyclicBufferSection::move(int value)
+int CyclicBufferSection::move_pos(int value)
 {
     int step = value % capacity_;
-    beg_ += value;
+    pos_ += value;
     /*
     if (step > 0) {
         int len_to_end = (buffer_ + capacity_) - beg_;
@@ -48,62 +48,51 @@ int CyclicBufferSection::move(int value)
 
 int CyclicBufferSection::write(char *data, const size_t data_len)
 {
-    int data_to_write = std::min(data_len, avail_size());
-    int len_to_end = (buffer_ + capacity_) - beg_;
-    if (len_to_end >= data_to_write) {
-        memcpy(beg_, data, data_to_write);
+    assert(data_len <= capacity_);
+    size_t len_to_end = (buffer_ + capacity_) - pos_;
+    if (len_to_end >= data_len) {
+        memcpy(pos_, data, data_len);
     } else {
-        memcpy(beg_, data, len_to_end);
-        memcpy(buffer_, data + len_to_end, data_to_write - len_to_end);
+        memcpy(pos_, data, len_to_end);
+        memcpy(buffer_, data + len_to_end, data_len - len_to_end);
     }
-    move(data_to_write);
-    return data_to_write;
+    move_pos(data_len);
+    return data_len;
 }
 
 int CyclicBufferSection::read(char* data, const size_t data_len)
 {
-    int data_to_read = std::min(avail_size(), data_len);
-    int len_to_end = (buffer_ + capacity_) - beg_;
-    if (len_to_end >= data_to_read) {
-        memcpy(data, beg_, data_to_read);
+    assert(data_len <= capacity_);
+    size_t len_to_end = (buffer_ + capacity_) - pos_;
+    if (len_to_end >= data_len) {
+        memcpy(data, pos_, data_len);
     } else {
-        memcpy(data, beg_, len_to_end);
-        memcpy(data + len_to_end, buffer_, data_to_read - len_to_end);
+        memcpy(data, pos_, len_to_end);
+        memcpy(data + len_to_end, buffer_, data_len - len_to_end);
     }
-    return data_to_read;
+    return data_len;
 }
 
 size_t CyclicBufferSection::capacity(void)
 {
     return capacity_;
 }
-    
-size_t CyclicBufferSection::avail_size(void)
-{
-    size_t avail_size = 0;
-    if (end_ >= beg_) {
-        avail_size = end_ - beg_;
-    } else {
-        avail_size = (end_ + capacity_) - beg_;
-    }
-    return avail_size;
-}
 
 CyclicBufferSection& CyclicBufferSection::operator+=(long value)
 {
-    move(value);
+    move_pos(value);
     return *this;
 }
 
 CyclicBufferSection& CyclicBufferSection::operator-=(long value)
 {
-    move(-value);
+    move_pos(-value);
     return *this;
 }
 
-void CyclicBufferSection::reset_offset(void)
+void CyclicBufferSection::reset_offset(long offset)
 {
-    offset_ = 0;
-    beg_ = buffer_;
+    offset_ = offset;
+    pos_ = buffer_;
 }
     
