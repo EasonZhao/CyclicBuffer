@@ -23,14 +23,13 @@ char* &CyclicBufferSection::pos(void)
 
 int CyclicBufferSection::move_pos(int value)
 {
-    int step = value % capacity_;
-    pos_ += step;
-    if (pos_ > (buffer_ + capacity_))
+    pos_ += value;
+    if (pos_ >= (buffer_ + capacity_))
         pos_ -= capacity_;
     else if (pos_ < buffer_)
         pos_ += capacity_;
     offset_ += value;
-    return step;
+    return value;
 }
 
 int CyclicBufferSection::write(char *data, const size_t data_len)

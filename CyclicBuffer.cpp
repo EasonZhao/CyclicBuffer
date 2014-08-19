@@ -21,37 +21,38 @@ CyclicBuffer::~CyclicBuffer()
 
 size_t CyclicBuffer::write(char *data, size_t const &len)
 {
-    size_t data_to_write = std::min(len, write_avail());
-    size_t write_ret = write_section_->write(data, data_to_write);
+    assert(len <= write_avail());
+    write_section_->write(data, len);
     //更新history数据
     size_t cap = write_section_->offset() - history_section_->offset();
     if (cap > capacity_)
         (*history_section_) += cap - capacity_;
-    return write_ret;
+    return len;
 }
 
 size_t CyclicBuffer::read(char *data, size_t const &len)
 {
-    size_t data_to_read = std::min(len, read_avail());
-    size_t read_ret = read_section_->read(data, data_to_read);
-    drop_size_ = std::max(drop_size_, read_ret);
+    assert(len <= read_avail());
+    size_t read_ret = read_section_->read(data, len);
+    drop_size_ = len;
     drop();
     return read_ret;
 }
 
 void CyclicBuffer::read(std::vector<boost::asio::const_buffer> &buffers)
 {
-    long read_size = write_section_->offset() - read_section_->offset(); 
+    buffers.clear();
+    long read_size = read_avail();
     long len_to_end = (buffer_ + capacity_) - read_section_->pos();
-    if (read_size < len_to_end) {
+    if (read_size <= len_to_end) {
         buffers.resize(1);
         buffers[0] = boost::asio::const_buffer(read_section_->pos(), read_size);
-        //buffers.push_back(boost::asio::const_buffer(read_section_->pos(), read_size));
     } else {
         buffers.resize(2);
         buffers[0] = boost::asio::const_buffer(read_section_->pos(), len_to_end);
         buffers[1] = boost::asio::const_buffer(buffer_, read_size - len_to_end);
     }
+    drop_size_ = read_size;
 }
 
 int CyclicBuffer::drop(int const &size)
@@ -66,13 +67,13 @@ void CyclicBuffer::set_read_offset(long const &offset)
 {
     if (read_section_->offset() == offset)
         return ;
-    //数据复用
-    if (offset >= history_section_->offset() && 
-        offset < write_section_->offset()) {
+    if (offset < history_section_->offset() || 
+        offset >= write_section_->offset()) {
+        reset(offset);
+    } else {
+        //数据复用
         long step = offset - read_section_->offset();
         (*read_section_) += step;
-    } else {
-        reset(offset);
     }
 }
 
@@ -93,15 +94,13 @@ size_t CyclicBuffer::capacity(void)
 
 size_t CyclicBuffer::write_avail(void)
 {
-/*
-    //获取历史数据中可以丢弃数据大小
-    int data_to_discard = save_buffer_size() - save_buffer_capacity();
-    return write_section_size() + (data_to_discard > 0 ? data_to_discard : 0);
-*/
-    //获取历史数据大小
+    //可以写入数据大小
+    long write_size = capacity_ - (write_section_->offset() - read_section_->offset());
+    //历史数据大小
     size_t history_size = read_section_->offset() - history_section_->offset();
-    return read_section_->offset() + capacity_ - write_section_->offset() - 
-        std::min(history_size, history_capacity());
+    //减去历史数据
+    write_size -= std::min(history_size, history_capacity());
+    return write_size;
 }
 
 size_t CyclicBuffer::read_avail(void)
@@ -158,7 +157,7 @@ size_t CyclicBuffer::history_capacity(void)
 
 size_t CyclicBuffer::resize(const size_t size)
 {
-    reset();
+    destory();
     capacity_ = size;
     create();
     return capacity();
