@@ -39,6 +39,21 @@ size_t CyclicBuffer::read(char *data, size_t const &len)
     return read_ret;
 }
 
+void CyclicBuffer::read(std::vector<boost::asio::const_buffer> &buffers)
+{
+    long read_size = write_section_->offset() - read_section_->offset(); 
+    long len_to_end = (buffer_ + capacity_) - read_section_->pos();
+    if (read_size < len_to_end) {
+        buffers.resize(1);
+        buffers[0] = boost::asio::const_buffer(read_section_->pos(), read_size);
+        //buffers.push_back(boost::asio::const_buffer(read_section_->pos(), read_size));
+    } else {
+        buffers.resize(2);
+        buffers[0] = boost::asio::const_buffer(read_section_->pos(), len_to_end);
+        buffers[1] = boost::asio::const_buffer(buffer_, read_size - len_to_end);
+    }
+}
+
 int CyclicBuffer::drop(int const &size)
 {
     int drop_size = std::min((size_t)size, drop_size_);

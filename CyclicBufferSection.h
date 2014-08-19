@@ -16,7 +16,7 @@ public:
 
     long offset(void);
 
-    char* pos(void);
+    char* & pos(void);
 
     ///写入函数
     ///@note 从beg开始写入，最多写入到end
@@ -24,7 +24,7 @@ public:
 
     ///@note 从beg开始读取，最多读取到end
     int read(char *data, const size_t data_len);
-
+    
     size_t capacity(void);
 
     CyclicBufferSection& operator += (long value);

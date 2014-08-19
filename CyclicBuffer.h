@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include "CyclicBufferSection.h"
+#include <boost/asio/buffer.hpp>
+#include <vector>
 
 class CyclicBufferSection;
 
@@ -16,6 +18,8 @@ public:
     size_t write(char *data, size_t const &len);
 
     size_t read(char *data, size_t const &len);
+
+    void read(std::vector<boost::asio::const_buffer> &buffers);
 
     int drop(int const &size = -1);
 

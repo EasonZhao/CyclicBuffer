@@ -16,7 +16,7 @@ long CyclicBufferSection::offset(void)
     return offset_;
 }
 
-char* CyclicBufferSection::pos(void)
+char* &CyclicBufferSection::pos(void)
 {
     return pos_;
 }
