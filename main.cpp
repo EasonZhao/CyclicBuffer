@@ -443,6 +443,14 @@ TEST(CyclicBufferSection, operator3)
     EXPECT_EQ(0, cp.offset());
 }
 
+TEST(CyclicBuffer, resize)
+{
+    CyclicBuffer cp(0);
+    size_t size = 1024*1024*8;
+    size = myrand(size); 
+    cp.resize(size);
+    EXPECT_EQ(size, cp.capacity());
+}
 
 int main(int argc, char** argv)
 {

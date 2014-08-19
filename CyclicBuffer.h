@@ -36,6 +36,9 @@ public:
 
     bool is_full(void);
 
+    ///重新设置大小
+    size_t resize(const size_t size);
+
 private:
     size_t history_capacity(void);
 

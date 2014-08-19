@@ -139,3 +139,11 @@ size_t CyclicBuffer::history_capacity(void)
 {
     return capacity_ / 3;
 }
+
+size_t CyclicBuffer::resize(const size_t size)
+{
+    reset();
+    capacity_ = size;
+    create();
+    return capacity();
+}
