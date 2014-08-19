@@ -32,10 +32,6 @@ public:
 
     size_t read_avail(void);
 
-    size_t create(size_t const & size);
-
-    void destory(void);
-
     void reset(long offset = 0);
 
     bool is_full(void);
@@ -45,13 +41,15 @@ private:
 
     size_t drop_save(size_t const &size);
 
+    size_t create(void);
+
+    void destory(void);
 private:
     char* buffer_;  
     CyclicBufferSection* history_section_;
     CyclicBufferSection* write_section_;
     CyclicBufferSection* read_section_;
     size_t capacity_;
-    bool is_create_;
     size_t drop_size_;
 };
 

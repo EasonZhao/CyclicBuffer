@@ -8,18 +8,15 @@ CyclicBuffer::CyclicBuffer(const size_t size) :
     history_section_(NULL),
     write_section_(NULL),
     read_section_(NULL),
-    capacity_(0),
-    is_create_(false),
+    capacity_(size),
     drop_size_(0)
 {
-    if (size>0)
-        create(size);
+    create();
 }
 
 CyclicBuffer::~CyclicBuffer()
 {
-    if (is_create_)
-        destory();
+    destory();
 }
 
 size_t CyclicBuffer::write(char *data, size_t const &len)
@@ -96,14 +93,12 @@ size_t CyclicBuffer::read_avail(void)
     return write_section_->offset() - read_section_->offset();
 }
 
-size_t CyclicBuffer::create(size_t const &size)
+size_t CyclicBuffer::create(void)
 {
-    if (is_create_) 
-        return 0;
-    buffer_ = new char[size];
+    if (capacity_ == 0) capacity_ = 1;
+    buffer_ = new char[capacity_];
     if (buffer_==NULL)
         return 0;
-    capacity_ = size;
     history_section_ = new CyclicBufferSection(buffer_, capacity_);
     read_section_ = new CyclicBufferSection(buffer_, capacity_);
     write_section_ = new CyclicBufferSection(buffer_, capacity_);
@@ -112,20 +107,17 @@ size_t CyclicBuffer::create(size_t const &size)
 
 void CyclicBuffer::destory(void)
 {
-    if (is_create_) {
-        delete[] buffer_;
-        capacity_ = 0;
-        drop_size_ = 0;
-        buffer_ = NULL;
-        delete history_section_;
-        history_section_ = NULL;
-        delete read_section_;
-        read_section_ = NULL;
-        delete write_section_;
-        write_section_ = NULL;
-        is_create_ = false;
-        reset();
-    }
+    delete[] buffer_;
+    capacity_ = 0;
+    drop_size_ = 0;
+    buffer_ = NULL;
+    delete history_section_;
+    history_section_ = NULL;
+    delete read_section_;
+    read_section_ = NULL;
+    delete write_section_;
+    write_section_ = NULL;
+    reset();
 }
 
 void CyclicBuffer::reset(long offset)

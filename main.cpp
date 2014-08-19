@@ -20,13 +20,22 @@ TEST(CyclicBuffer, create)
     EXPECT_EQ(size, buff.capacity());
 }
 
+/*
 TEST(CyclicBuffer, create2)
 {
     size_t size = 8*1024*1024;
+    size = myrand(size);
     CyclicBuffer cb;
     size_t result = cb.create(size);
     bool ret = ((result==size) && (cb.capacity()==size));
     EXPECT_EQ(ret, true);
+}
+*/
+
+TEST(CyclicBuffer, create3)
+{
+    CyclicBuffer cp(0);
+    EXPECT_EQ(1, cp.capacity());
 }
 
 TEST(CyclicBuffer, write)
@@ -174,7 +183,7 @@ TEST(CyclicBuffer, read_avail)
     delete[] p;
     EXPECT_EQ(cb.read_avail(), write_ret);
 }
-
+/*
 TEST(CyclicBuffer, destory)
 {
     size_t size = 8*1024*1024;
@@ -182,6 +191,7 @@ TEST(CyclicBuffer, destory)
     cb.destory();
     EXPECT_EQ(1, 1);
 }
+*/
 
 TEST(CyclicBuffer, reset)
 {
@@ -432,6 +442,7 @@ TEST(CyclicBufferSection, operator3)
     cp -= 1;
     EXPECT_EQ(0, cp.offset());
 }
+
 
 int main(int argc, char** argv)
 {
