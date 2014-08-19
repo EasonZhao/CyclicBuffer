@@ -308,7 +308,7 @@ TEST(CyclicBuffer, test_file)
         read_size = std::min(read_size, (size_t)(file_size - read_total));
         if (read_size > 0) {
             in.read(read_buff, read_size);
-            printf("read size:%d\n", read_size);
+            //printf("read size:%d\n", read_size);
             assert(in);
             int ret = cb.write(read_buff, read_size);
             assert(ret == read_size);
@@ -324,7 +324,7 @@ TEST(CyclicBuffer, test_file)
             assert(ret == write_size);
             cb.drop(write_size);
             out.write(write_buff, write_size);
-            printf("write size:%d\n", write_size);
+            //printf("write size:%d\n", write_size);
             assert(out);
             write_total += write_size;
         }

@@ -24,24 +24,11 @@ char* CyclicBufferSection::pos(void)
 int CyclicBufferSection::move_pos(int value)
 {
     int step = value % capacity_;
-    pos_ += value;
-    /*
-    if (step > 0) {
-        int len_to_end = (buffer_ + capacity_) - beg_;
-        if (step <= len_to_end) {
-            beg_ += step;
-        } else {
-            beg_ = buffer_ + (step - len_to_end);
-        }
-    } else {
-        int len_to_beg = beg_ - buffer_;
-        if ((-step) <= len_to_beg) {
-            beg_ += step;
-        } else {
-            beg_ = (buffer_ + capacity_) + (step + len_to_beg);
-        }
-    }
-    */
+    pos_ += step;
+    if (pos_ > (buffer_ + capacity_))
+        pos_ -= capacity_;
+    else if (pos_ < buffer_)
+        pos_ += capacity_;
     offset_ += value;
     return step;
 }
