@@ -35,6 +35,7 @@ size_t CyclicBuffer::read(char *data, size_t const &len)
     size_t data_to_read = std::min(len, read_avail());
     size_t read_ret = read_section_->read(data, data_to_read);
     drop_size_ = std::max(drop_size_, read_ret);
+    drop();
     return read_ret;
 }
 

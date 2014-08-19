@@ -80,7 +80,7 @@ TEST(CyclicBuffer, drop)
     cb.write(msg, len); 
     char tmp[5] = {0};
     cb.read(tmp, 5);
-    cb.drop(5);
+    //cb.drop(5);
     char out[128] = {0};
     cb.read(out, 4);
     EXPECT_EQ(0, strcmp("read", out));
@@ -96,7 +96,7 @@ TEST(CyclicBuffer, drop2)
     size_t read_size = myrand(len);
     char out[128] = {0};
     cb.read(out, read_size);
-    cb.drop();
+    //cb.drop();
     EXPECT_EQ(cb.read_avail(), len - read_size);
 }
 
@@ -108,7 +108,7 @@ TEST(CyclicBuffer, drop3)
     cb.write(p, size); 
     char* out = new char[size];
     cb.read(out, size);
-    cb.drop();
+    //cb.drop();
     delete[] p;
     delete[] out;
     EXPECT_EQ(cb.write_avail(), size - size / 3);
@@ -132,7 +132,7 @@ TEST(CyclicBuffer, get_read_offset2)
     char* p = new char[drop_size];
     delete[] p;
     cb.read(p, drop_size);
-    cb.drop(drop_size);
+    //cb.drop(drop_size);
     delete[] data;
     EXPECT_EQ(drop_size, cb.get_read_offset());
 }
@@ -275,7 +275,7 @@ TEST(CyclicBuffer, set_offset4)
     delete[] p;
     char c;
     cb.read(&c, 1);
-    cb.drop(1);
+    //cb.drop(1);
     int read_offset = cb.get_read_offset();
     assert(read_offset==1);
     int offset = 0;
@@ -291,7 +291,7 @@ TEST(CyclicBuffer, set_offset5)
     char *p = new char[size];
     cb.write(p, size);
     cb.read(p, size);
-    cb.drop();
+    //cb.drop();
     int write_ret = cb.write(p, size);
     int offset = 0;
     cb.set_read_offset(offset);
@@ -332,7 +332,7 @@ TEST(CyclicBuffer, test_file)
         if (write_size > 0) {
             int ret = cb.read(write_buff, write_size); 
             assert(ret == write_size);
-            cb.drop(write_size);
+            //cb.drop(write_size);
             out.write(write_buff, write_size);
             //printf("write size:%d\n", write_size);
             assert(out);
