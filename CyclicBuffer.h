@@ -17,11 +17,13 @@ public:
 
     size_t write(char *data, size_t const &len);
 
+    size_t write(boost::asio::const_buffer buffer);
+
     size_t read(char *data, size_t const &len);
 
     void read(std::vector<boost::asio::const_buffer> &buffers);
 
-    int drop(int const &size = -1);
+    int drop(const unsigned long size = -1);
 
     void set_read_offset(long const &offset);
 
@@ -41,6 +43,7 @@ public:
     bool is_full(void);
 
     ///重新设置大小
+    ///@note resize会清空有效数据
     size_t resize(const size_t size);
 
 private:
