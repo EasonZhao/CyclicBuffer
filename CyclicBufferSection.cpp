@@ -32,7 +32,7 @@ int CyclicBufferSection::move_pos(int value)
     return value;
 }
 
-int CyclicBufferSection::write(char *data, const size_t data_len)
+int CyclicBufferSection::write(const char *data, const size_t data_len)
 {
     assert(data_len <= capacity_);
     size_t len_to_end = (buffer_ + capacity_) - pos_;

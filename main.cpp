@@ -44,7 +44,7 @@ TEST(CyclicBuffer, write)
     CyclicBuffer cb(size);
     size_t write_size = myrand(size);
     char *p = new char[write_size];
-    size_t result = cb.write(p, write_size);
+    size_t result = cb.write((const char*)p, write_size);
     delete[] p;
     EXPECT_EQ(result, write_size);
 }
@@ -54,7 +54,7 @@ TEST(CyclicBuffer, write2)
     size_t size = 8*1024*1024;
     CyclicBuffer cb(size);
     char *p = new char[size];
-    cb.write(p, size);
+    cb.write((const char*)p, size);
     delete[] p;
     EXPECT_EQ(0, cb.write_avail());
 }
@@ -345,6 +345,26 @@ TEST(CyclicBuffer, set_offset5)
     EXPECT_EQ(cb.read_avail(), 0);
 }
 
+/*
+TEST(CyclicBuffer, set_offset6)
+{
+    //向前set到最后一个位置
+    size_t size = 8*1024*1024;
+    CyclicBuffer cb(size);
+    char *p = new char[size];
+    cb.write(p, size);
+    cb.read(p, size);
+    //cb.drop();
+    size = cb.write_avail();
+    int write_ret = cb.write(p, size);
+    long offset = cb.get_write_offset();
+    long tmp = cb.write_avail();
+    cb.set_read_offset(offset);
+    delete[] p;
+    EXPECT_EQ(cb.write_avail(), tmp);
+}
+*/
+
 TEST(CyclicBuffer, test_file)
 {
     size_t size = 8*1024*1024;
@@ -412,7 +432,7 @@ TEST(CyclicBufferSection, write)
     char *p = msg;
     size_t len = 11;
     CyclicBufferSection cp(p, len);
-    cp.write("test write", 11);
+    cp.write((const char*)"test write", 11);
     EXPECT_EQ(0, strcmp(p, "test write"));
 }
 

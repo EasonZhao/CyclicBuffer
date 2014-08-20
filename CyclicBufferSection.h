@@ -20,7 +20,7 @@ public:
 
     ///写入函数
     ///@note 从beg开始写入，最多写入到end
-    int write(char *data, const size_t data_len);
+    int write(const char *data, const size_t data_len);
 
     ///@note 从beg开始读取，最多读取到end
     int read(char *data, const size_t data_len);

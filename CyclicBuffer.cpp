@@ -11,7 +11,7 @@ CyclicBuffer::CyclicBuffer(const size_t size) :
     capacity_(size),
     drop_size_(0)
 {
-    assert(create() == capacity_);
+    create();
 }
 
 CyclicBuffer::~CyclicBuffer()
@@ -19,7 +19,7 @@ CyclicBuffer::~CyclicBuffer()
     destory();
 }
 
-size_t CyclicBuffer::write(char *data, size_t const &len)
+size_t CyclicBuffer::write(const char *data, size_t const &len)
 {
     assert(len <= write_avail());
     int ret = write_section_->write(data, len);
@@ -34,7 +34,7 @@ size_t CyclicBuffer::write(boost::asio::const_buffer buffer)
 {
     const char *p = boost::asio::buffer_cast<const char *>(buffer);
     size_t size = boost::asio::buffer_size(buffer);
-    return write(const_cast<char*>(p), size);
+    return write(p, size);
 }
 
 size_t CyclicBuffer::read(char *data, size_t const &len)
@@ -75,12 +75,13 @@ void CyclicBuffer::set_read_offset(long const &offset)
     if (read_section_->offset() == offset)
         return ;
     if (offset < history_section_->offset() || 
-        offset >= write_section_->offset()) {
+        offset > write_section_->offset()) {
         reset(offset);
     } else {
         //数据复用
         long step = offset - read_section_->offset();
         (*read_section_) += step;
+        drop_size_ = 0;
     }
 }
 
@@ -149,6 +150,7 @@ void CyclicBuffer::reset(long offset)
         read_section_->reset_offset(offset);
     if (write_section_)
         write_section_->reset_offset(offset);
+    drop_size_ = 0;
 }
 
 bool CyclicBuffer::is_full(void)

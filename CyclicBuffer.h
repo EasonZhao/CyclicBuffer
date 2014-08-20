@@ -15,7 +15,7 @@ public:
 
     ~CyclicBuffer(void);
 
-    size_t write(char *data, size_t const &len);
+    size_t write(const char *data, size_t const &len);
 
     size_t write(boost::asio::const_buffer buffer);
 
