@@ -21,7 +21,8 @@ public:
 
     size_t read(char *data, size_t const &len);
 
-    void read(std::vector<boost::asio::const_buffer> &buffers);
+    void read(std::vector<boost::asio::const_buffer> &buffers,
+        const long len);
 
     int drop(const unsigned long size = -1);
 

@@ -80,7 +80,7 @@ TEST(CyclicBuffer, read_pos)
     cb.write(msg, len); 
     //char out[128] = {0};
     std::vector<boost::asio::const_buffer> vb;
-    cb.read(vb);
+    cb.read(vb, cb.read_avail());
     EXPECT_EQ(0, strcmp(msg, boost::asio::buffer_cast<const char*>(vb[0])));
 }
 
@@ -96,7 +96,7 @@ TEST(CyclicBuffer, read_pos1)
     cb.write(msg, len); 
     //char out[128] = {0};
     std::vector<boost::asio::const_buffer> vb;
-    cb.read(vb);
+    cb.read(vb, cb.read_avail());
     assert(vb.size() == 2);
     EXPECT_EQ(0, strcmp("read", boost::asio::buffer_cast<const char*>(vb[1])));
 }
@@ -113,9 +113,39 @@ TEST(CyclicBuffer, read_pos2)
     size_t len = sizeof(msg)/sizeof(msg[0]);
     cb.write(msg, len); 
     std::vector<boost::asio::const_buffer> vb;
-    cb.read(vb);
+    cb.read(vb, cb.read_avail());
     EXPECT_EQ(1, vb.size());
 }
+
+TEST(CyclicBuffer, read_pos3)
+{
+    size_t size = 1000;
+    CyclicBuffer cb(size);
+    char data[] = "test read";
+    cb.write(data, sizeof(data) / sizeof(data[0]));
+    std::vector<boost::asio::const_buffer> vb;
+    cb.read(vb, 4);
+    string ret(boost::asio::buffer_cast<const char*>(vb[0]), 
+                boost::asio::buffer_size(vb[0]));
+    EXPECT_EQ(true, ret=="test");
+}
+
+TEST(CyclicBuffer, read_pos4)
+{
+    size_t size = 1000;
+    CyclicBuffer cb(size);
+    char data[] = "testread";
+    cb.write(data, sizeof(data) / sizeof(data[0]));
+    std::vector<boost::asio::const_buffer> vb;
+    cb.read(vb, 4);
+    cb.drop();
+    cb.read(vb, 4);
+    string ret(boost::asio::buffer_cast<const char*>(vb[0]), 
+                boost::asio::buffer_size(vb[0]));
+    cout << ret << endl;
+    EXPECT_EQ(true, ret=="read");
+}
+
 TEST(CyclicBuffer, drop)
 {
     size_t size = 8*1024*1024;
