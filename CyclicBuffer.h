@@ -60,6 +60,7 @@ private:
     CyclicBufferSection* write_section_;
     CyclicBufferSection* read_section_;
     size_t capacity_;
+    size_t history_capacity_;
     size_t drop_size_;
 };
 

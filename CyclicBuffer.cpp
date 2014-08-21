@@ -9,6 +9,7 @@ CyclicBuffer::CyclicBuffer(const size_t size) :
     write_section_(NULL),
     read_section_(NULL),
     capacity_(size),
+    history_capacity_(0),
     drop_size_(0)
 {
     create();
@@ -125,6 +126,7 @@ size_t CyclicBuffer::create(void)
     history_section_ = new CyclicBufferSection(buffer_, capacity_);
     read_section_ = new CyclicBufferSection(buffer_, capacity_);
     write_section_ = new CyclicBufferSection(buffer_, capacity_);
+    history_capacity_ = capacity_ / 3;
     return capacity();
 }
 
@@ -144,12 +146,9 @@ void CyclicBuffer::destory(void)
 
 void CyclicBuffer::reset(long offset)
 {
-    if (history_section_) 
-        history_section_->reset_offset(offset);
-    if (read_section_)
-        read_section_->reset_offset(offset);
-    if (write_section_)
-        write_section_->reset_offset(offset);
+    history_section_->reset_offset(offset);
+    read_section_->reset_offset(offset);
+    write_section_->reset_offset(offset);
     drop_size_ = 0;
 }
 
@@ -160,7 +159,7 @@ bool CyclicBuffer::is_full(void)
 
 size_t CyclicBuffer::history_capacity(void)
 {
-    return capacity_ / 3;
+    return history_capacity_;
 }
 
 size_t CyclicBuffer::resize(const size_t size)
